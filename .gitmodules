@@ -1,0 +1,6 @@
+[submodule "ff-api"]
+	path = ff-api
+	url = git@github.com:edalhama/ff-api.git
+[submodule "ff-web"]
+	path = ff-web
+	url = git@github.com:edalhama/ff-web.git
