@@ -2,6 +2,8 @@
 
 Cómo está montado **fantasyfutbol.es** en el VPS (aaPanel, Apache, detrás de Cloudflare) y cómo se despliega. Misma operativa que [UTMA](../utma/DEPLOY.md): un usuario `deployer` que sube por `rsync` y ejecuta lo necesario por SSH.
 
+> **Primera vez**: sigue [PRIMER-DESPLIEGUE.md](PRIMER-DESPLIEGUE.md), la guía paso a paso con comandos y comprobaciones.
+
 > **Sin probar en el servidor.** Los scripts y la configuración de este documento se han escrito a partir de la guía de UTMA y se han probado en local (el servidor de páginas, su caché, la purga y la API). Apache, Supervisor y Cloudflare no: el primer despliegue es también su prueba. Las comprobaciones de cada paso están al final.
 
 ## 1. Cómo queda montado
