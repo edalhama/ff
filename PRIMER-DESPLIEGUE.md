@@ -306,6 +306,7 @@ El script sube el código, instala dependencias, migra la base de datos y deja l
 ✅ Termina con `¡Despliegue de ff-api completado!`. Antes, la purga de caché muestra un error en la línea «Servidor de render»: es normal, el servidor de páginas aún no existe.
 
 Si falla:
+- **`rsync: delete_file: unlink(.user.ini) failed: Operation not permitted`** y el despliegue se detiene: la carpeta tiene un `.user.ini` de aaPanel (inmutable) y el script intentaba borrarlo. Corregido en `deploy.cjs` (lo excluye); vuelve a lanzarlo.
 - **`composer` dice que `proc_open` o `putenv` están desactivadas**: 🅰️ **App Store → PHP-8.5 → Setting → Disabled functions** → quita esas dos de la lista. (Con UTMA desplegando en este mismo PHP no debería pasar.)
 - **`SQLSTATE[HY000] [1045] Access denied`**: los `DB_*` del `.env` (fase 4).
 - **`Class "Redis" not found`**: falta la extensión (paso 3.3).
