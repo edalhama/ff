@@ -131,6 +131,15 @@ SITE_DATA_CACHE_TTL=600
 # Cloudflare (opcional, apartado 4)
 CLOUDFLARE_ZONE_ID=
 CLOUDFLARE_API_TOKEN=
+# Correo por la Gmail API, como en UTMA (ff-api/docs/GMAIL_SETUP.md); los avisos van por la cola (paso F)
+MAIL_MAILER=gmail-api
+MAIL_FROM_ADDRESS=avisos@fantasyfutbol.es
+MAIL_FROM_NAME=fantasyfutbol
+GMAIL_CLIENT_ID=…
+GMAIL_CLIENT_SECRET=…
+GMAIL_REFRESH_TOKEN=…
+# Avisos de incidencias: a quién, si no quieres avisar a todos los administradores
+INCIDENT_MAIL_TO=
 ```
 
 ```bash
@@ -176,6 +185,37 @@ No repitas ninguna clave dentro del fichero: Dotenv se queda con la última sin 
 
    Si el 4000 estuviera ocupado (`ss -ltnp | grep :4000`), cámbialo en cuatro sitios: `PORT` de este `.env`, `PAGE_CACHE_URL` del `.env` de ff-api, la regla del proxy en `ff-web/src/.htaccess` y `renderUrl` en `ff-web/deploy.js`.
 
+### E. Cron del programador
+
+La sincronización con los proveedores la decide `sync:tick` cada minuto desde el programador de Laravel (ver `ff-api/docs/SYNC.md` → Programación). Hace falta el cron del scheduler, igual que en UTMA (aaPanel → Cron, como `deployer`, cada minuto):
+
+```
+* * * * * cd /ruta/a/ff-api && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Con Redis como caché, los bloqueos del scheduler (`withoutOverlapping`) y el de cada competición ya tienen dónde guardarse. Sin el cron no se sincroniza nada solo: solo a mano desde el panel o con `sync:run`.
+
+El panel (Tareas) enseña el último latido de `sync:tick`: si dice «Parado», el cron de arriba no está corriendo.
+
+### F. Worker de colas (correo)
+
+El correo sale por la **Gmail API** con el mismo transporte que UTMA (`MAIL_MAILER=gmail-api`; credenciales y cómo obtener el refresh token en `ff-api/docs/GMAIL_SETUP.md`). Los avisos de incidencias (una sincronización que falla, el programador parado, la caché de páginas que no responde; ver `ff-api/docs/SYNC.md` → Incidencias) **se encolan** en la tabla `jobs` (`QUEUE_CONNECTION=database`) en vez de enviarse en el momento: hace falta un worker corriendo de forma permanente, igual que `utma-api-queue-worker`.
+
+1. En aaPanel → App Store → **Supervisor Manager** (ya instalado para el servidor de páginas), nuevo proceso:
+   * *Nombre*: `fantasyfutbol-api-queue-worker`
+   * *Usuario*: `deployer`
+   * *Directorio*: `/www/wwwroot/fantasyfutbol.es_api`
+   * *Procesos*: `1`
+   * *Comando*:
+     ```bash
+     /www/server/php/85/bin/php artisan queue:work --tries=3 --sleep=3 --max-time=3600
+     ```
+     `--max-time=3600` recicla el proceso cada hora (Supervisor lo vuelve a levantar): evita fugas de memoria y hace que recoja código nuevo aunque falle un `queue:restart`.
+2. **Sin worker, los avisos no salen nunca**: quedan en `jobs`. `SELECT COUNT(*) FROM jobs;` creciendo sin bajar = el worker no consume. `jobs` y `failed_jobs` vacías = nunca se encoló nada: la incidencia no se abrió (mira el panel, Tareas).
+3. **Trabajos fallidos** (agotaron los 3 intentos, p. ej. credenciales de Gmail mal): `php artisan queue:failed` los lista; `php artisan queue:retry all` los reencola tras arreglar la causa.
+4. **Reinicio tras cada despliegue**: `ff-api/deploy.cjs` ya ejecuta `php artisan queue:restart`. El worker tiene el código y el `.env` en memoria desde que arrancó; sin eso seguiría con la versión anterior. Lo mismo tras cambiar las credenciales de Gmail a mano.
+5. **Comprobar que el correo sale**: panel → Tareas → Incidencias → «Enviar prueba» a tu dirección. Es síncrono a propósito: si falla, el aviso trae el mensaje de Google. Los avisos de incidencia van a `INCIDENT_MAIL_TO` o, vacío, a todos los administradores activos (el mismo bloque dice a quién).
+
 ## 3. Desplegar
 
 Desde tu equipo, con tu clave SSH autorizada para `deployer` (`ssh -p 1311 deployer@145.239.197.90 true` tiene que entrar sin pedir nada). Siempre **primero la API y después la web**: la web nueva puede pedir datos que la API antigua no da.
@@ -185,7 +225,7 @@ cd ff-api && node deploy.cjs
 cd ../ff-web && npm run deploy
 ```
 
-**`ff-api/deploy.cjs`** sincroniza el código (sin `.env`, `vendor`, `tests` ni lo que hay en `storage`), y en el servidor ejecuta `composer install --no-dev`, `migrate --force`, `config:cache`, `route:cache` y purga la caché.
+**`ff-api/deploy.cjs`** sincroniza el código (sin `.env`, `vendor`, `tests` ni lo que hay en `storage`), y en el servidor ejecuta `composer install --no-dev`, `migrate --force`, `config:cache`, `route:cache`, `view:cache`, `queue:restart` (el worker de correo, apartado F) y purga la caché.
 
 **`ff-web/deploy.js`** (`npm run deploy`):
 
@@ -299,5 +339,4 @@ El del servidor de páginas lo guarda Supervisor (Supervisor Manager → Log).
 
 ## 6. Pendiente
 
-- **Sincronización programada.** Cuando se decida su frecuencia, hará falta el cron del scheduler de Laravel, igual que en UTMA (aaPanel → Cron, como `deployer`, cada minuto). Con Redis como caché, los bloqueos del scheduler (`withoutOverlapping`) ya tendrán dónde guardarse.
 - **Política de seguridad de contenido (CSP).** El `.htaccess` pone las demás cabeceras de seguridad; la CSP queda para cuando el sitio esté estable, porque las páginas generadas en el servidor llevan scripts en línea que habría que autorizar uno a uno.

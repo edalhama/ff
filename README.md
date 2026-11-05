@@ -111,4 +111,5 @@ Sitio en `http://localhost:4203` y panel en `http://localhost:4203/admin`, con e
 | Entorno local (Sail) | [ff-api/docs/DEV.md](ff-api/docs/DEV.md) |
 | Sincronización con proveedores | [ff-api/docs/SYNC.md](ff-api/docs/SYNC.md) |
 | Caché de las páginas públicas | [ff-api/docs/PAGE-CACHE.md](ff-api/docs/PAGE-CACHE.md) |
+| Correo (Gmail API, como en UTMA) | [ff-api/docs/GMAIL_SETUP.md](ff-api/docs/GMAIL_SETUP.md) |
 | Despliegue | [DEPLOY.md](DEPLOY.md) |
