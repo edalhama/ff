@@ -1,0 +1,24 @@
+# Worker `ff-assets`: sirve el bucket privado de imágenes bajo img.fantasyfutbol.es.
+# Ver src/worker.js y README.md. Se despliega con `npm run deploy` (necesita CLOUDFLARE_API_TOKEN).
+
+name = "ff-assets"
+main = "src/worker.js"
+compatibility_date = "2026-11-01"
+account_id = "e126ecf6001c7795d9a6191e47827c33"
+
+# Sin URL *.workers.dev: solo se entra por el dominio propio.
+workers_dev = false
+preview_urls = false
+
+# Custom Domain: Cloudflare crea y mantiene el registro DNS de img.fantasyfutbol.es.
+routes = [
+  { pattern = "img.fantasyfutbol.es", custom_domain = true }
+]
+
+[vars]
+GCS_BUCKET = "fantasyfutbol-assets"
+
+# Secretos (no van aquí): GCS_CLIENT_EMAIL y GCS_PRIVATE_KEY, con `npm run secrets`.
+
+[observability]
+enabled = true

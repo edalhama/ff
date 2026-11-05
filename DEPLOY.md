@@ -131,6 +131,15 @@ SITE_DATA_CACHE_TTL=600
 # Cloudflare (opcional, apartado 4)
 CLOUDFLARE_ZONE_ID=
 CLOUDFLARE_API_TOKEN=
+# Imágenes (apartado 4, «Imágenes»; ff-api/docs/ASSETS.md): el bucket y el Worker que lo sirve.
+# ASSETS_FALLBACK=true enseña la URL del proveedor mientras no haya copia: ponlo a false
+# cuando `assets:status` diga que está todo descargado
+ASSETS_SYNC=true
+ASSETS_DISK=gcs
+ASSETS_URL=https://img.fantasyfutbol.es
+ASSETS_FALLBACK=true
+GOOGLE_CLOUD_PROJECT_ID=fantasyfutbol-513810
+GOOGLE_CLOUD_STORAGE_BUCKET=fantasyfutbol-assets
 # Correo por la Gmail API, como en UTMA (ff-api/docs/GMAIL_SETUP.md); los avisos van por la cola (paso F)
 MAIL_MAILER=gmail-api
 MAIL_FROM_ADDRESS=avisos@fantasyfutbol.es
@@ -294,6 +303,26 @@ Lo propio de este sitio:
   Cada página sale con `Cache-Control: s-maxage=…` (cuánto puede guardarla Cloudflare) y `Cache-Tag` (de qué datos depende); la purga usa esas etiquetas.
 
 - La IP real del visitante la saca Laravel de `X-Forwarded-For` porque confía en los rangos de Cloudflare (`ff-api/config/trustedproxy.php`).
+
+### Imágenes: bucket de Google Cloud y Worker `img.fantasyfutbol.es`
+
+Las caras, escudos, logos y fotos de estadio no se enlazan a los proveedores: ff-api las descarga a un bucket **privado** de Google Cloud Storage y el sitio las pide a `https://img.fantasyfutbol.es/…`, un Worker de Cloudflare que es la única puerta al bucket y que cachea cada imagen un año (las URLs llevan el hash del contenido, así que no hay purga). Está montado y probado; lo que hay, cómo se despliega el Worker y cómo se rotan las claves está en [infra/cloudflare/assets-worker/README.md](infra/cloudflare/assets-worker/README.md).
+
+| Qué | Valor |
+|-----|-------|
+| Proyecto de Google Cloud | `fantasyfutbol-513810` (facturación enlazada) |
+| Bucket | `fantasyfutbol-assets`, Madrid (`europe-southwest1`), acceso uniforme y Public Access Prevention |
+| Cuenta de servicio de ff-api | `ff-api-assets@fantasyfutbol-513810.iam.gserviceaccount.com`, `storage.objectAdmin` solo sobre el bucket |
+| Cuenta de servicio del Worker | `ff-assets-reader@…`, `storage.objectViewer` solo sobre el bucket; su clave vive en los secretos del Worker |
+
+**En el VPS**, como en UTMA: la clave JSON de `ff-api-assets` va en `/www/wwwroot/fantasyfutbol.es_api/service-account.json`, se instala a mano (el despliegue ni la sube ni la borra: está en el `.gitignore` y excluida en `deploy.cjs`) y queda legible solo para `deployer` y PHP:
+
+```bash
+chown deployer:www /www/wwwroot/fantasyfutbol.es_api/service-account.json
+chmod 640 /www/wwwroot/fantasyfutbol.es_api/service-account.json
+```
+
+Las variables de ff-api (`ASSETS_*`, `GOOGLE_CLOUD_*`) están en el `.env` del paso C. Las imágenes las descarga el worker de colas (paso F) tras cada sincronización y el repaso diario del programador (paso E); la primera carga completa de una liga son unas 3.000 descargas y tarda unos minutos. `php artisan assets:status` dice cómo va (ver `ff-api/docs/ASSETS.md`).
 
 ## 5. Comprobar y diagnosticar
 

@@ -9,7 +9,7 @@ Workspace con la misma operativa que [UTMA](../utma): frontend Angular (**ff-web
 | Parte | Estado |
 |-------|--------|
 | Modelo de datos | Definido y documentado |
-| **ff-api** | Base Laravel 13 con Sail, migraciones, enums, modelos y seeders. Autenticación del admin por JWT. Panel: competiciones, temporadas (calendario, clasificación y equipos) y equipos. Sincronización con API-Football: calendario, equipos y clasificación de una liga, desde el panel o por consola. API pública de solo lectura para el sitio. Purga de la caché de páginas |
+| **ff-api** | Base Laravel 13 con Sail, migraciones, enums, modelos y seeders. Autenticación del admin por JWT. Panel: competiciones, temporadas (calendario, clasificación y equipos) y equipos. Sincronización con API-Football: calendario, equipos y clasificación de una liga, desde el panel o por consola. Imágenes (caras, escudos, logos) descargadas de los proveedores a un bucket propio y servidas por Cloudflare. API pública de solo lectura para el sitio. Purga de la caché de páginas |
 | **ff-web** | Angular 22 con `edas-ng` y `edas-layout`. **Parte pública** en español e inglés, generada en el servidor: portada, competiciones (resumen, clasificación, calendario por jornadas, equipos) y fichas de equipo, con SEO y datos estructurados. **Panel de gestión**: competiciones, temporadas, equipos, sincronización y caché de páginas |
 | Producción | `fantasyfutbol.es`, en un VPS con aaPanel detrás de Cloudflare. Scripts de despliegue escritos; **primer despliegue pendiente** (ver [DEPLOY.md](DEPLOY.md)) |
 | Git | En GitHub: este repositorio (`ff`) con `ff-api` y `ff-web` como submódulos; `ff-web` lleva a su vez `edas-ng` y `edas-layout` |
@@ -110,6 +110,7 @@ Sitio en `http://localhost:4203` y panel en `http://localhost:4203/admin`, con e
 | Endpoints | [ff-api/docs/API.md](ff-api/docs/API.md) |
 | Entorno local (Sail) | [ff-api/docs/DEV.md](ff-api/docs/DEV.md) |
 | Sincronización con proveedores | [ff-api/docs/SYNC.md](ff-api/docs/SYNC.md) |
+| Imágenes: bucket, Worker de Cloudflare y sincronización | [ff-api/docs/ASSETS.md](ff-api/docs/ASSETS.md), [infra/cloudflare/assets-worker/README.md](infra/cloudflare/assets-worker/README.md) |
 | Caché de las páginas públicas | [ff-api/docs/PAGE-CACHE.md](ff-api/docs/PAGE-CACHE.md) |
 | Correo (Gmail API, como en UTMA) | [ff-api/docs/GMAIL_SETUP.md](ff-api/docs/GMAIL_SETUP.md) |
 | Despliegue | [DEPLOY.md](DEPLOY.md) |

@@ -1,0 +1,14 @@
+{
+  "name": "ff-assets-worker",
+  "private": true,
+  "description": "Worker de Cloudflare que sirve el bucket privado de imágenes de fantasyfutbol bajo img.fantasyfutbol.es",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "secrets": "node scripts/put-secrets.mjs",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.158.0"
+  }
+}
