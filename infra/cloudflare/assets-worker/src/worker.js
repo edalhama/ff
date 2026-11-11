@@ -1,6 +1,6 @@
 /**
  * Worker de Cloudflare para `img.fantasyfutbol.es`: sirve las imágenes (caras, escudos, logos,
- * estadios, equipaciones) del bucket PRIVADO de Google Cloud Storage `fantasyfutbol-assets`.
+ * estadios, equipaciones, canales de TV) del bucket PRIVADO de Google Cloud Storage `fantasyfutbol-assets`.
  *
  * Por qué existe:
  *   - El bucket no es público (Public Access Prevention activa). El único que lo lee es este
@@ -17,6 +17,7 @@
  *   /p/{id}/{hash}.{ext}  → players/{id}/{hash}.{ext}        caras
  *   /c/{id}/{hash}.{ext}  → competitions/{id}/{hash}.{ext}   logos de competición
  *   /v/{id}/{hash}.{ext}  → venues/{id}/{hash}.{ext}         fotos de estadio
+ *   /tv/{id}/{hash}.{ext} → tv-channels/{id}/{hash}.{ext}    logos de canales de TV (subidos a mano)
  *   El hash son 16 hex (SHA-256 del fichero, recortado), con un sufijo opcional `-xx` para
  *   variantes (tamaños) que ff-api pueda generar más adelante.
  *
@@ -26,11 +27,11 @@
  *   GCS_PRIVATE_KEY    su clave privada PEM, del JSON de la clave (secreto)
  */
 
-/** Prefijo público (una letra) → carpeta del bucket. */
-const FOLDERS = { t: 'teams', p: 'players', c: 'competitions', v: 'venues' };
+/** Prefijo público (una letra, o `tv`) → carpeta del bucket. Tiene que coincidir con AssetUrl de ff-api. */
+const FOLDERS = { t: 'teams', p: 'players', c: 'competitions', v: 'venues', tv: 'tv-channels' };
 
 /** Ruta pública válida: prefijo, id numérico, hash de 16 hex con variante opcional, extensión. */
-const PATH = /^\/([tpcv])\/(\d{1,12})\/([0-9a-f]{16}(?:-[a-z0-9]{1,8})?)\.(png|jpg|jpeg|webp|avif|gif|svg)$/;
+const PATH = /^\/(tv|[tpcv])\/(\d{1,12})\/([0-9a-f]{16}(?:-[a-z0-9]{1,8})?)\.(png|jpg|jpeg|webp|avif|gif|svg)$/;
 
 const CACHE_CONTROL = {
   ok: 'public, max-age=31536000, immutable',

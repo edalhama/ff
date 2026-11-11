@@ -1,6 +1,6 @@
 # Worker `ff-assets` — img.fantasyfutbol.es
 
-Sirve las imágenes (caras, escudos, logos, estadios, equipaciones) del bucket **privado** de Google Cloud Storage `fantasyfutbol-assets` bajo `https://img.fantasyfutbol.es/`. Es la única puerta al bucket: ni el sitio ni nadie enlaza a `storage.googleapis.com`. Ver el comentario de cabecera de [src/worker.js](src/worker.js) para las rutas que admite y cómo cachea.
+Sirve las imágenes (caras, escudos, logos, estadios, equipaciones, logos de canales de TV) del bucket **privado** de Google Cloud Storage `fantasyfutbol-assets` bajo `https://img.fantasyfutbol.es/`. Es la única puerta al bucket: ni el sitio ni nadie enlaza a `storage.googleapis.com`. Ver el comentario de cabecera de [src/worker.js](src/worker.js) para las rutas que admite y cómo cachea.
 
 ## Lo que hay montado
 
@@ -37,6 +37,8 @@ npm run secrets -- ~/.config/fantasyfutbol/ff-assets-reader.json
 curl -sI https://img.fantasyfutbol.es/t/1/0123456789abcdef.png
 # Directo al bucket, sin credenciales: 403 siempre
 curl -sI https://storage.googleapis.com/fantasyfutbol-assets/teams/1/0123456789abcdef.png
+# Los logos de los canales de TV van bajo /tv/ (carpeta tv-channels del bucket)
+curl -sI https://img.fantasyfutbol.es/tv/1/0123456789abcdef.png
 # Ruta fuera del patrón: 404 sin llegar al bucket
 curl -sI https://img.fantasyfutbol.es/teams/1/x.png
 # Lo que está pasando en el Worker, en directo

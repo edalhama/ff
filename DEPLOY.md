@@ -106,7 +106,7 @@ DB_USERNAME=…
 DB_PASSWORD=…
 
 SESSION_DRIVER=array
-QUEUE_CONNECTION=sync
+QUEUE_CONNECTION=database
 
 # Redis (paso B): bases de datos propias, distintas de las de UTMA
 CACHE_STORE=redis
